@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ACU Heat Load Calculator</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+  <style>
+    :root {
+      /* Native iOS System Font Stack */
+      --font-sans: -apple-system, "SF Pro Text", "SF Pro Icons", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --color-background-primary: #ffffff;
+      --color-background-secondary: #f8fafc;
+      --color-background-info: #eff6ff;
+      --color-background-success: #f0fdf4;
+      --color-background-warning: #fffbeb;
+      --color-text-primary: #0f172a;
+      --color-text-secondary: #475569;
+      --color-text-tertiary: #94a3b8;
+      --color-text-info: #1d4ed8;
+      --color-text-success: #166534;
+      --color-text-warning: #9a3412;
+      --color-text-danger: #991b1b;
+      --color-border-tertiary: #e2e8f0;
+      --color-border-info: #bfdbfe;
+      --border-radius-lg: 12px;
+      --border-radius-md: 8px;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font-sans);font-size:14px;color:var(--color-text-primary);background-color: #f1f5f9;padding: 2rem 1rem;-webkit-font-smoothing: antialiased;}
+    .container {max-width: 1000px; margin: 0 auto;}
+    h2{font-size:22px;font-weight:600;margin-bottom:1.5rem;letter-spacing: -0.02em;}
+    h3{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em}
+    .tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:1px solid var(--color-border-tertiary);padding-bottom:0}
+    .tab{padding:10px 20px;font-size:14px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--color-text-secondary);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;display:flex;align-items:center;gap:6px}
+    .tab.active{color:var(--color-text-primary);border-bottom-color:var(--color-text-primary);font-weight:600}
+    .tab:hover:not(.active){color:var(--color-text-primary)}
+    .panel{display:none}.panel.active{display:block}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+    .card{background:var(--color-background-primary);border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.5rem;box-shadow: 0 1px 3px rgba(0,0,0,0.05)}
+    .metric{background:var(--color-background-secondary);border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:14px 16px;text-align:center}
+    .metric-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px;font-weight:500}
+    .metric-val{font-size:22px;font-weight:600;color:var(--color-text-primary);letter-spacing: -0.01em;}
+    .metric-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+    label{display:block;font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:500}
+    input[type=number],input[type=text],select{width:100%;font-size:14px;padding:8px 12px;border:1px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);color:var(--color-text-primary);outline:none;background-color:var(--color-background-primary);font-family:var(--font-sans);}
+    input:focus, select:focus{border-color:var(--color-text-secondary)}
+    .row{display:grid;grid-template-columns:80px 1fr 1fr 100px;gap:12px;align-items:center;margin-bottom:8px}
+    .row-label{font-size:13px;color:var(--color-text-secondary);font-weight:500}
+    .row .area{font-size:13px;color:var(--color-text-primary);text-align:right}
+    .divider{height:1px;background:var(--color-border-tertiary);margin:1.25rem 0}
+    .result-box{background:var(--color-background-info);border:1px solid var(--color-border-info);border-radius:var(--border-radius-lg);padding:1.25rem 1.5rem;margin-top:1.5rem}
+    .result-box .rec-main{font-size:32px;font-weight:700;color:var(--color-text-info);letter-spacing: -0.03em;}
+    .result-box .rec-alt{font-size:14px;color:var(--color-text-info);opacity:.8;margin-top:4px;font-weight:500}
+    .eqm-row{display:grid;grid-template-columns:32px 1fr 160px;gap:12px;align-items:center;margin-bottom:8px}
+    .eqm-num{font-size:12px;color:var(--color-text-tertiary);text-align:center}
+    .add-btn{font-size:13px;padding:8px 16px;cursor:pointer;margin-top:8px;border-radius:var(--border-radius-md);border:1px solid var(--color-border-tertiary);background:var(--color-background-primary);font-weight:500;display:inline-flex;align-items:center;gap:4px;font-family:var(--font-sans);transition: background 0.1s;}
+    .add-btn:hover{background:var(--color-background-secondary)}
+    .del-btn{background:none;border:none;cursor:pointer;color:var(--color-text-tertiary);font-size:20px;padding:0 6px;line-height:1;transition: color 0.1s;}
+    .del-btn:hover{color:var(--color-text-danger)}
+    table.ref{width:100%;font-size:13px;border-collapse:collapse}
+    table.ref th{font-weight:600;color:var(--color-text-secondary);text-align:left;padding:8px;border-bottom:1px solid var(--color-border-tertiary)}
+    table.ref td{padding:8px;border-bottom:1px solid var(--color-border-tertiary)}
+    table.ref tr:last-child td{border-bottom:none}
+    table.ref tr.hl td{background:var(--color-background-info);color:var(--color-text-info);font-weight:600}
+    
+    @media(max-width: 768px) {
+      .grid2, .grid3 { grid-template-columns: 1fr; }
+      .tabs { overflow-x: auto; }
+      .row { grid-template-columns: 70px 1fr 1fr 80px; gap: 6px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>ACU Heat Load Calculator</h2>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('walls')"><i class="ti ti-building"></i> Walls</button>
+    <button class="tab" onclick="showTab('internal')"><i class="ti ti-users"></i> Internal Loads</button>
+    <button class="tab" onclick="showTab('equipment')"><i class="ti ti-bolt"></i> Equipment</button>
+    <button class="tab" onclick="showTab('results')"><i class="ti ti-calculator"></i> Results</button>
+    <button class="tab" onclick="showTab('ref')"><i class="ti ti-book"></i> Reference</button>
+  </div>
+
+  <div id="panel-walls" class="panel active">
+    <div class="card">
+      <h3>Wall Dimensions</h3>
+      <div class="row" style="margin-bottom:8px; font-weight:600;">
+        <span class="row-label">Wall</span>
+        <span style="font-size:12px;color:var(--color-text-secondary)">Width (m)</span>
+        <span style="font-size:12px;color:var(--color-text-secondary)">Height (m)</span>
+        <span class="area" style="font-size:12px;color:var(--color-text-secondary)">Area (m²)</span>
+      </div>
+      
+      <div id="wall-rows"></div>
+      <button class="add-btn" onclick="addWall()"><i class="ti ti-plus"></i> Add Wall</button>
+      
+      <div class="divider"></div>
+      <div class="row">
+        <span class="row-label" style="font-weight:600">Total</span>
+        <span></span><span></span>
+        <span class="area" id="total-area" style="font-weight:600; font-size:14px;">0 m²</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Thermal Resistance of Wall</h3>
+      <div class="grid2">
+        <div>
+          <label>Wall Material</label>
+          <select id="material" onchange="materialChanged()">
+            <option value="0.4" selected>CHB (0.4)</option>
+            <option value="0.08">Drywall / Gypsum Board (0.08)</option>
+            <option value="0.11">Wood / Plywood (0.11)</option>
+            <option value="0.18">Wood / Solid Lumber (0.18)</option>
+            <option value="0.006">Glass, Single Pane (0.006)</option>
+            <option value="0.3">Glass, Double Glazed (0.3)</option>
+            <option value="custom">Custom...</option>
+          </select>
+        </div>
+        <div>
+          <label>R-value (m²·K/W)</label>
+          <input type="number" id="r-value" value="0.4" step="0.001" min="0" oninput="calc()">
+        </div>
+      </div>
+      <div class="grid3" style="margin-top:16px">
+        <div><label>Outside Air Film</label><input type="number" id="outside-film" value="0.044" step="0.001" oninput="calc()"></div>
+        <div><label>Inside Air Film</label><input type="number" id="inside-film" value="0.1" step="0.001" oninput="calc()"></div>
+        <div><label>Total Thermal Resistance</label><input type="number" id="total-r" readonly style="color:var(--color-text-secondary); background:#f8fafc;"></div>
+      </div>
+      <div class="grid2" style="margin-top:16px">
+        <div><label>Outside Temp (°C)</label><input type="number" id="temp-out" value="36" step="0.5" oninput="calc()"></div>
+        <div><label>Inside Temp (°C)</label><input type="number" id="temp-in" value="20" step="0.5" oninput="calc()"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-internal" class="panel">
+    <div class="grid2">
+      <div class="card">
+        <h3>Occupants</h3>
+        <div style="margin-bottom:12px">
+          <label>Number of People</label>
+          <input type="number" id="occ-count" value="15" min="0" oninput="calc()">
+        </div>
+        <div style="margin-bottom:12px">
+          <label>Heat Gain per Person (W)</label>
+          <select id="occ-gain-sel" onchange="occGainChanged()">
+            <option value="80">Low activity — 80 W</option>
+            <option value="115">Common office — 115 W</option>
+            <option value="160" selected>Active work — 160 W</option>
+            <option value="custom">Custom...</option>
+          </select>
+          <input type="number" id="occ-gain" value="160" step="1" min="0" oninput="calc()" style="margin-top:8px">
+        </div>
+        <div>
+          <label>Cooling Load Factor (CLF)</label>
+          <input type="number" id="occ-clf" value="1.0" step="0.1" min="0" max="1" oninput="calc()">
+          <span style="font-size:11px;color:var(--color-text-tertiary)">1.0 = 24hr or cooling off at night</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Lighting</h3>
+        <div style="margin-bottom:12px">
+          <label>Rated Wattage per Fixture (W)</label>
+          <input type="number" id="lgt-w" value="16" min="0" oninput="calc()">
+        </div>
+        <div style="margin-bottom:12px">
+          <label>Quantity of Fixtures</label>
+          <input type="number" id="lgt-qty" value="6" min="0" oninput="calc()">
+        </div>
+        <div style="margin-bottom:12px">
+          <label>Lighting Use Factor</label>
+          <input type="number" id="lgt-uf" value="1.0" step="0.1" min="0" max="1" oninput="calc()">
+        </div>
+        <div style="margin-bottom:12px">
+          <label>Blast Factor Allowance</label>
+          <input type="number" id="lgt-bf" value="1.0" step="0.1" min="0" oninput="calc()">
+        </div>
+        <div>
+          <label>Cooling Load Factor (CLF)</label>
+          <input type="number" id="lgt-clf" value="1.0" step="0.1" min="0" max="1" oninput="calc()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-equipment" class="panel">
+    <div class="card">
+      <h3>Equipment Heat Load</h3>
+      <div class="eqm-row" style="margin-bottom:8px; font-weight:600;">
+        <span style="font-size:11px;color:var(--color-text-tertiary);text-align:center">#</span>
+        <span style="font-size:12px;color:var(--color-text-secondary)">Item Name</span>
+        <span style="font-size:12px;color:var(--color-text-secondary)">Rated Wattage (W)</span>
+      </div>
+      <div id="eqm-rows"></div>
+      <button class="add-btn" onclick="addEquipment()"><i class="ti ti-plus"></i> Add Equipment</button>
+      
+      <div class="divider"></div>
+      
+      <div class="grid2">
+        <div>
+          <label>Usage Factor</label>
+          <input type="number" id="eqm-uf" value="0.5" step="0.1" min="0" max="1" oninput="calc()">
+        </div>
+        <div>
+          <label>Cooling Load Factor (CLF)</label>
+          <input type="number" id="eqm-clf" value="1.0" step="0.1" min="0" max="1" oninput="calc()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="panel-results" class="panel">
+    <div class="grid2" style="margin-bottom:1.5rem">
+      <div class="grid2">
+        <div class="metric"><div class="metric-label">Transmission (Walls)</div><div class="metric-val" id="r-trans">—</div></div>
+        <div class="metric"><div class="metric-label">Occupants Load</div><div class="metric-val" id="r-occ">—</div></div>
+      </div>
+      <div class="grid2">
+        <div class="metric"><div class="metric-label">Lighting Load</div><div class="metric-val" id="r-lgt">—</div></div>
+        <div class="metric"><div class="metric-label">Equipment Load</div><div class="metric-val" id="r-eqm">—</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="grid3" style="gap:24px;align-items:center">
+        <div>
+          <label style="margin-bottom:2px">Calculated Heat Load</label>
+          <div style="font-size:26px;font-weight:600" id="r-total-kw">—</div>
+          <div style="font-size:12px;color:var(--color-text-secondary)" id="r-total-btu">— BTU/hr</div>
+        </div>
+        <div>
+          <label style="margin-bottom:2px">Required with Safety Margin</label>
+          <div style="font-size:26px;font-weight:600; color:var(--color-text-info)" id="r-safety">—</div>
+          <div style="font-size:12px;color:var(--color-text-secondary)" id="r-safety-btu">— BTU/hr</div>
+        </div>
+        <div>
+          <label style="margin-bottom:4px">Factor of Safety (Multiplier)</label>
+          <input type="number" id="safety-pct" value="1.15" step="0.05" min="1" max="2" oninput="calc()">
+          <span style="font-size:11px;color:var(--color-text-tertiary)">spreadsheet default target ≈ 36,000 BTU/hr total max cap</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-box">
+      <div style="font-size:12px;color:var(--color-text-info);margin-bottom:4px;font-weight:600;text-transform:uppercase;">Recommended ACU Capacity</div>
+      <div class="rec-main" id="r-rec">—</div>
+      <div class="rec-alt" id="r-rec-alt">—</div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem;">
+      <h3>Load Breakdown Visualization</h3>
+      <div style="position:relative;width:100%;height:250px"><canvas id="loadChart"></canvas></div>
+      <div id="chart-legend" style="display:flex;flex-wrap:wrap;gap:16px;margin-top:12px;font-size:12px;justify-content:center;"></div>
+    </div>
+  </div>
+
+  <div id="panel-ref" class="panel">
+    <div class="grid2">
+      <div class="card">
+        <h3>ACU Sizing Chart Reference</h3>
+        <table class="ref" id="ref-table">
+          <thead><tr><th>kW Range</th><th>BTU/hr Range</th><th>Target ACU Unit</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:1.5rem">
+          <h3>Wall Material R-Values</h3>
+          <table class="ref">
+            <thead><tr><th>Material</th><th>R-value (m²·K/W)</th></tr></thead>
+            <tbody>
+              <tr><td>CHB</td><td>0.40</td></tr>
+              <tr><td>Drywall / Gypsum Board</td><td>0.08</td></tr>
+              <tr><td>Wood / Plywood</td><td>0.11</td></tr>
+              <tr><td>Wood / Solid Lumber</td><td>0.18</td></tr>
+              <tr><td>Glass, Single Pane</td><td>0.006</td></tr>
+              <tr><td>Glass, Double Glazed</td><td>0.30</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Heat Gain per Person</h3>
+          <table class="ref">
+            <thead><tr><th>Activity Level</th><th>Sensible Heat Gain</th></tr></thead>
+            <tbody>
+              <tr><td>Low Activity</td><td>80 W/person</td></tr>
+              <tr><td>Common Office Estimate</td><td>100–130 W/person</td></tr>
+              <tr><td>Active Work</td><td>160–220 W/person</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const ACU_TABLE = [
+  {min:0,max:2.64,btuMin:0,btuMax:9000,label:'1.0 HP'},
+  {min:2.64,max:3.52,btuMin:9001,btuMax:12000,label:'1.5 HP'},
+  {min:3.52,max:5.28,btuMin:12001,btuMax:18000,label:'2.0 HP'},
+  {min:5.28,max:7.03,btuMin:18001,btuMax:24000,label:'2.5 HP'},
+  {min:7.03,max:8.79,btuMin:24001,btuMax:30000,label:'3.0 HP'},
+  {min:8.79,max:10.55,btuMin:30001,btuMax:36000,label:'4.0 HP'},
+  {min:10.55,max:14.07,btuMin:36001,btuMax:48000,label:'5.0 HP'},
+  {min:14.07,max:17.58,btuMin:48001,btuMax:60000,label:'6.0 HP'}
+];
+
+// Starts with exactly 4 walls matching your spreadsheet values
+let walls = [
+  {w:5,h:2},
+  {w:5,h:2},
+  {w:6,h:2},
+  {w:6,h:2}
+];
+
+let equipment = [
+  {name:'VFFS',w:2500},
+  {name:'VFFS',w:2500},
+  {name:'VFFS',w:2500},
+  {name:'VFFS',w:2500}
+];
+let chart;
+
+function v(id){return parseFloat(document.getElementById(id).value)||0}
+function el(id){return document.getElementById(id)}
+
+function showTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  event.target.closest('.tab').classList.add('active');
+  el('panel-'+tab).classList.add('active');
+}
+
+function renderWalls(){
+  const cont=el('wall-rows');
+  cont.innerHTML='';
+  walls.forEach((w,i)=>{
+    const row=document.createElement('div');
+    row.className='row';
+    row.innerHTML=`<span class="row-label">Wall — ${i+1}</span>
+      <input type="number" value="${w.w || ''}" placeholder="Width" step="0.1" min="0" oninput="walls[${i}].w=parseFloat(this.value)||0;calcAreas()">
+      <div style="display:flex;gap:6px;align-items:center;grid-column: span 1;">
+        <input type="number" value="${w.h || ''}" placeholder="Height" step="0.1" min="0" oninput="walls[${i}].h=parseFloat(this.value)||0;calcAreas()">
+        <button class="del-btn" onclick="removeWall(${i})" aria-label="Delete">×</button>
+      </div>
+      <span class="area" id="area-${i}">${w.w&&w.h?(w.w*w.h).toFixed(1):0} m²</span>`;
+    cont.appendChild(row);
+  });
+  calcAreas();
+}
+
+function addWall(){
+  walls.push({w:0,h:0});
+  renderWalls();
+}
+
+function removeWall(i){
+  walls.splice(i,1);
+  renderWalls();
+}
+
+function calcAreas(){
+  let total=0;
+  walls.forEach((w,i)=>{
+    const a=((w.w||0)*(w.h||0));
+    const el2=document.getElementById('area-'+i);
+    if(el2) el2.textContent=a>0 ? a.toFixed(1)+' m²' : '0 m²';
+    total+=a;
+  });
+  el('total-area').textContent=total.toFixed(1)+' m²';
+  calc();
+}
+
+function materialChanged(){
+  const sel=el('material');
+  if(sel.value!=='custom'){
+    el('r-value').value=sel.value;
+  }
+  calc();
+}
+
+function occGainChanged(){
+  const sel=el('occ-gain-sel');
+  if(sel.value!=='custom'){
+    el('occ-gain').value=sel.value;
+  }
+  calc();
+}
+
+function renderEquipment(){
+  const cont=el('eqm-rows');
+  cont.innerHTML='';
+  equipment.forEach((eq,i)=>{
+    const row=document.createElement('div');
+    row.className='eqm-row';
+    row.innerHTML=`<span class="eqm-num">${i+1}</span>
+      <input type="text" value="${eq.name}" placeholder="e.g. Machine" oninput="equipment[${i}].name=this.value">
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="number" value="${eq.w || ''}" placeholder="0" min="0" oninput="equipment[${i}].w=parseFloat(this.value)||0;calc()">
+        <button class="del-btn" onclick="removeEquipment(${i})" aria-label="Delete">×</button>
+      </div>`;
+    cont.appendChild(row);
+  });
+}
+
+function addEquipment(){
+  equipment.push({name:'',w:0});
+  renderEquipment();
+  calc();
+}
+
+function removeEquipment(i){
+  equipment.splice(i,1);
+  renderEquipment();
+  calc();
+}
+
+function getRecommendation(kw){
+  for(const row of ACU_TABLE){
+    if(kw<=row.max) return row;
+  }
+  return ACU_TABLE[ACU_TABLE.length-1];
+}
+
+function altUnits(hp){
+  const map={
+    '1.0 HP':'1 unit 1.0 HP',
+    '1.5 HP':'1 unit 1.5 HP',
+    '2.0 HP':'1 unit 2.0 HP or 2 × 1.0 HP',
+    '2.5 HP':'1 unit 2.5 HP',
+    '3.0 HP':'1 unit 3.0 HP',
+    '4.0 HP':'4.0 HP (Spreadsheet Target: 2 units 2.0 HP)',
+    '5.0 HP':'1 unit 5.0 HP or 2 × 2.5 HP',
+    '6.0 HP':'2 units 3.0 HP'
+  };
+  return map[hp]||'';
+}
+
+function calc(){
+  // 1. Transmission / Wall Loads
+  const totalArea=walls.reduce((s,w)=>s+(w.w||0)*(w.h||0),0);
+  const rWall=v('r-value'), rOut=v('outside-film'), rIn=v('inside-film');
+  const totalR=rWall+rOut+rIn;
+  el('total-r').value=totalR.toFixed(3);
+  const tOut=v('temp-out'), tIn=v('temp-in');
+  const transW=totalR>0?totalArea*(tOut-tIn)/totalR:0;
+  const transKW=transW/1000;
+
+  // 2. Occupants Load
+  const occW=v('occ-count')*v('occ-gain')*v('occ-clf');
+  const occKW=occW/1000;
+
+  // 3. Lighting Load
+  const lgtW=v('lgt-w')*v('lgt-qty')*v('lgt-uf')*v('lgt-bf')*v('lgt-clf');
+  const lgtKW=lgtW/1000;
+
+  // 4. Equipment Load
+  const eqmTotalW=equipment.reduce((s,e)=>s+(e.w||0),0);
+  const eqmW=eqmTotalW*v('eqm-uf')*v('eqm-clf');
+  const eqmKW=eqmW/1000;
+
+  // Totals calculations
+  const totalKW=transKW + occKW + lgtKW + eqmKW;
+  const totalBTU=totalKW*3412.142;
+  
+  const safetyMultiplier=v('safety-pct')||1.15;
+  const safeKW=totalKW*safetyMultiplier;
+  const safeBTU=safeKW*3412.142;
+
+  // Print results to elements
+  el('r-trans').textContent=transKW.toFixed(4)+' kW';
+  el('r-occ').textContent=occKW.toFixed(4)+' kW';
+  el('r-lgt').textContent=lgtKW.toFixed(4)+' kW';
+  el('r-eqm').textContent=eqmKW.toFixed(4)+' kW';
+  el('r-total-kw').textContent=totalKW.toFixed(4)+' kW';
+  el('r-total-btu').textContent=totalBTU.toLocaleString(undefined,{maximumFractionDigits:1})+' BTU/hr';
+  el('r-safety').textContent=safeKW.toFixed(4)+' kW';
+  el('r-safety-btu').textContent=safeBTU.toLocaleString(undefined,{maximumFractionDigits:1})+' BTU/hr';
+
+  // Sizing Table mapping
+  const rec=getRecommendation(safeKW);
+  el('r-rec').textContent=rec?rec.label:'> 6.0 HP';
+  el('r-rec-alt').textContent=rec?altUnits(rec.label):'';
+
+  updateRefTable(safeKW);
+  updateChart(transKW,occKW,lgtKW,eqmKW);
+}
+
+function updateRefTable(safeKW){
+  const tbody=el('ref-table').querySelector('tbody');
+  tbody.innerHTML='';
+  ACU_TABLE.forEach(row=>{
+    const tr=document.createElement('tr');
+    const isMatch=safeKW>row.min&&safeKW<=row.max;
+    if(isMatch) tr.className='hl';
+    tr.innerHTML=`<td>${row.min}–${row.max} kW</td><td>${row.btuMin.toLocaleString()}–${row.btuMax.toLocaleString()}</td><td>${row.label}${isMatch?' ✓ Current Matched Size':''}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateChart(trans,occ,lgt,eqm){
+  const labels=['Transmission','Occupants','Lighting','Equipment'];
+  const data=[trans,occ,lgt,eqm];
+  const colors=['#3b82f6','#10b981','#f59e0b','#ef4444'];
+  const legend=el('chart-legend');
+  legend.innerHTML=labels.map((l,i)=>`<span style="display:flex;align-items:center;gap:6px"><span style="width:12px;height:12px;border-radius:3px;background:${colors[i]}"></span>${l}: ${data[i].toFixed(3)} kW</span>`).join('');
+
+  if(chart){chart.destroy();}
+  chart=new Chart(el('loadChart'),{
+    type:'bar',
+    data:{labels,datasets:[{data,backgroundColor:colors,borderWidth:0,borderRadius:4,barThickness: 40}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.parsed.y.toFixed(3)} kW`}}},
+      scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{callback:v=>v.toFixed(1)+' kW'}},x:{grid:{display:false}}}
+    }
+  });
+}
+
+// Initializing UI
+renderWalls();
+renderEquipment();
+</script>
+</body>
+</html>
